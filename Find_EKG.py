@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import streamlit as st
 
 
 def Create_EKG_DF(ekgs):
@@ -21,7 +22,7 @@ def Create_EKG_DF(ekgs):
     ekg_df.to_csv('EKGs.csv', index=False)
 
 
-print('\n\nGood Morning, Dave. I am reading your EKGs...')
+print('\n\nGood Morning, Dave. I am reading your exported EKGs...')
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
 
@@ -29,7 +30,7 @@ dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 print(f'I am creating an index of your {len(ekgs)} EKGs...')
 Create_EKG_DF(ekgs)
-
+ekg_df = pd.read_csv('EKGs.csv')
 
 print(ekg_df)
 
