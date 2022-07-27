@@ -53,6 +53,15 @@ def Get_Singles(peaks):
     return singles
 
 
+def Get_PACs(singles):
+    singles['interval'] = singles.seconds.shift(-1) - singles.seconds
+    median = singles.interval.median()
+    singles['med'] = median
+    singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
+    PACs = int((singles[singles.sq_diff > .01].shape[0]/2)+.5)
+    return PACs
+
+
 # create streamlit page
 a = st.empty()
 path = './apple_health_export/'
@@ -67,7 +76,9 @@ a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
 ekg_df = pd.read_csv('EKGs.csv')
 poor = ekg_df[ekg_df.clas == 'Poor Recording']
 ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
-ekg_str = st.sidebar.selectbox('Select EKG', ekg_df.name.tolist(), index=0)
+year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
+select_df = ekg_df[ekg_df.name.str.contains(year)]
+ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
 # st.write(ekg_str)
 st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
 # a.write(ekg_df.head(1))
@@ -102,13 +113,28 @@ st.write(time1-time0)
 
 # Get PACs
 
+
+# def Get_PACs(singles):
+#     singles['interval'] = singles.seconds.shift(-1) - singles.seconds
+#     median = singles.interval.median()
+#     singles['med'] = median
+#     singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
+#     PACs = singles[singles.sq_diff > .01].shape[0]/2
+#     return PACs
+
+
 # add interval to singles
-singles['interval'] = singles.seconds.shift(-1) - singles.seconds
-median = singles.interval.median()
-st.write(type(median))
-singles['med'] = median
-singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
+# singles['interval'] = singles.seconds.shift(-1) - singles.seconds
+# median = singles.interval.median()
+# singles['med'] = median
+# singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
 st.write(singles)
-fig, ax = plt.subplots(figsize=(15, 4))
-plt.hist(singles.interval, bins=30)
-st.pyplot(fig)
+# PACs = singles[singles.sq_diff > .01].shape[0]/2
+PACs = Get_PACs(singles)
+st.write(PACs)
+# st.write(round(.5, 1), round(.5, 0), round(.5, 2))
+
+# fig, ax = plt.subplots(figsize=(15, 4))
+# plt.hist(singles.sq_diff, bins=30)
+# plt.vlines(singles.sq_diff.median(), 0, 10, colors='r')
+# st.pyplot(fig)
