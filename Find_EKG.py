@@ -42,6 +42,17 @@ def Clean_EKG(ekg):
     return ekg
 
 
+def Get_Singles(peaks):
+    singles = pd.DataFrame()
+    while peaks.shape[0] > 0:
+        peak = peaks.iloc[0, 1]
+        group = peaks.loc[peaks.seconds < peak+.4]
+        single = group[group.peak == group.peak.max()]
+        singles = pd.concat([singles, single])
+        peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    return singles
+
+
 # create streamlit page
 a = st.empty()
 path = './apple_health_export/'
@@ -68,20 +79,15 @@ st.write(f'You have selected {ekg_str}, classified as {this_classification}')
 ekg = Clean_EKG(ekg)
 
 # plot EKG
-# ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
-# find the ekg max
+
+# find the ekg peaks
 maxes = ekg.nlargest(200, 'peak')
 max = maxes.peak.median()
 peaks = ekg[ekg.peak > 0.5*max]
-singles = pd.DataFrame()
-while peaks.shape[0] > 0:
-    peak = peaks.iloc[0, 1]
-    group = peaks.loc[peaks.seconds < peak+.4]
-    single = group[group.peak == group.peak.max()]
-    singles = pd.concat([singles, single])
-    peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+# get single peaks
+singles = Get_Singles(peaks)
 
-# plot
+# plot EKG and single peaks
 x = ekg.seconds
 y = ekg.micro_volts
 time0 = time.time()
