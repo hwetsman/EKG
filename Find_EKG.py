@@ -70,12 +70,26 @@ ekg['seconds'] = ekg.index * 1/510.227
 ekg = ekg[['micro_volts', 'seconds']]
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
 max = ekg.peak.max()
-peaks = ekg[ekg.peak > 0.7*max]
-# st.write(peaks.seconds)
-for peak in peaks.seconds:
-    # st.write(type(peak))
-    group = peaks[(peaks.seconds < peak+.4) & (peaks.seconds > peak-.4)]
-    st.write(group)
+peaks = ekg[ekg.peak > 0.65*max]
+st.write(peaks.seconds)
+singles = pd.DataFrame()
+while peaks.shape[0] > 0:
+    # for i in range(4):
+    # st.write('peaks', peaks)
+    peak = peaks.iloc[0, 1]
+    # st.write(peak, peak+.4, peak-.4)
+    group = peaks.loc[peaks.seconds < peak+.4]
+    # st.write('group', group)
+    # find max row of group
+    single = group[group.peak == group.peak.max()]
+    # st.write('single', single)
+    # add max row to new df
+    singles = pd.concat([singles, single])
+    # st.write('singles', singles)
+    # subtract group from peaks
+    peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    # st.write(peaks)
+    # go again
     # st.write(peak, peaks.loc[peaks[peaks.peak == peak.index.tolist()[0]], 'micro_volts'])
 st.write(max, peaks.shape[0], peaks)
 
@@ -84,7 +98,7 @@ x = ekg.seconds
 y = ekg.micro_volts
 time0 = time.time()
 fig, ax = plt.subplots(figsize=(15, 4))
-for peak in peaks.seconds.tolist():
+for peak in singles.seconds.tolist():
     plt.vlines(peak, -500, 1500, colors='r')
 ax.set_ylim(y.min(), y.max())
 plt.plot(x, y)
