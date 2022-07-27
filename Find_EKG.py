@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import streamlit as st
+import time
 
 
 def Create_EKG_DF(ekgs):
@@ -22,21 +23,55 @@ def Create_EKG_DF(ekgs):
     ekg_df.to_csv('EKGs.csv', index=False)
 
 
-print('\n\nGood Morning, Dave. I am reading your exported EKGs...')
+def Get_EKG(name):
+    file = dir+'/'+name
+    df = pd.read_csv(file)
+    st.write(df)
+    return df
+
+
+def Clean_EKG(ekg):
+    ekg = ekg[9::]
+    ekg.reset_index(inplace=True, drop=False)
+    ekg.columns = ['micro_volts', 'ignore']
+    ekg.micro_volts = ekg.micro_volts.astype(float)
+    st.write(ekg)
+    return ekg
+
+
+# create streamlit page
+a = st.empty()
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
-
-
 ekgs = os.listdir(dir)
-print(f'I am creating an index of your {len(ekgs)} EKGs...')
-Create_EKG_DF(ekgs)
+a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
+
+# create ekg df
+#############skip for now#################
+# Create_EKG_DF(ekgs)
+##########################################
 ekg_df = pd.read_csv('EKGs.csv')
+poor = ekg_df[ekg_df.clas == 'Poor Recording']
+ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
+st.sidebar.selectbox('Select EKG', ekg_df.name.tolist(), index=0)
+st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
+a.write(ekg_df)
 
-print(ekg_df)
+# select and clean EKG to show
+ekg = st.write(list(set(ekg_df.clas.tolist())))
+ekg = Get_EKG(ekg_df.iloc[0, 0])
+st.write(ekg_df[ekg_df.name == ekg])
+st.write(ekg_df.name[ekg_df.name == ekg].index.tolist())
+# st.write(f'You have selected {ekg}, classified as {ekg_df.loc[idx,'clas']}')
+ekg = Clean_EKG(ekg)
 
-
-# get data from individual df
-# example = example.iloc[9::]
-# example.columns = ['micro_volts', 'ignore']
-
-# print(example.head(10))
+# plot EKG
+x = ekg.index[::3]
+y = ekg.micro_volts[::3]
+time0 = time.time()
+fig, ax = plt.subplots(figsize=(15, 4))
+ax.set_ylim(y.min(), y.max())
+plt.plot(x, y)
+st.pyplot(fig)
+time1 = time.time()
+st.write(time1-time0)
