@@ -26,7 +26,7 @@ def Create_EKG_DF(ekgs):
 def Get_EKG(name):
     file = dir+'/'+name
     df = pd.read_csv(file)
-    st.write(df)
+    # st.write(df)
     return df
 
 
@@ -56,10 +56,10 @@ ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
 ekg_str = st.sidebar.selectbox('Select EKG', ekg_df.name.tolist(), index=0)
 # st.write(ekg_str)
 st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
-a.write(ekg_df.head(1))
+# a.write(ekg_df.head(1))
 
 # select and clean EKG to show
-st.write(list(set(ekg_df.clas.tolist())))
+# st.write(list(set(ekg_df.clas.tolist())))
 ekg = Get_EKG(ekg_str)
 this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
 st.write(f'You have selected {ekg_str}, classified as {this_classification}')
@@ -70,7 +70,7 @@ ekg['seconds'] = ekg.index * 1/510.227
 ekg = ekg[['micro_volts', 'seconds']]
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
 max = ekg.peak.max()
-peaks = ekg[ekg.peak > 0.65*max]
+peaks = ekg[ekg.peak > 0.5*max]
 # st.write(peaks.seconds)
 singles = pd.DataFrame()
 while peaks.shape[0] > 0:
