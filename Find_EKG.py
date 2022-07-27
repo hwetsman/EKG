@@ -36,6 +36,7 @@ def Clean_EKG(ekg):
     ekg.columns = ['micro_volts', 'ignore']
     ekg.micro_volts = ekg.micro_volts.astype(float)
     ekg['seconds'] = ekg.index * 1/510.227
+    ekg = ekg[['micro_volts', 'seconds']]
     return ekg
 
 
@@ -67,7 +68,7 @@ ekg = Clean_EKG(ekg)
 
 # plot EKG
 # ekg['seconds'] = ekg.index * 1/510.227
-ekg = ekg[['micro_volts', 'seconds']]
+# ekg = ekg[['micro_volts', 'seconds']]
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
 max = ekg.peak.max()
 peaks = ekg[ekg.peak > 0.5*max]
