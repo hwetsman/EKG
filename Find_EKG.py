@@ -31,7 +31,7 @@ def Get_EKG(name):
 
 
 def Clean_EKG(ekg):
-    ekg = ekg[9::]
+    ekg = ekg[1000::]
     ekg.reset_index(inplace=True, drop=False)
     ekg.columns = ['micro_volts', 'ignore']
     ekg.micro_volts = ekg.micro_volts.astype(float)
@@ -71,7 +71,7 @@ ekg = ekg[['micro_volts', 'seconds']]
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
 max = ekg.peak.max()
 peaks = ekg[ekg.peak > 0.65*max]
-st.write(peaks.seconds)
+# st.write(peaks.seconds)
 singles = pd.DataFrame()
 while peaks.shape[0] > 0:
     # for i in range(4):
@@ -91,9 +91,9 @@ while peaks.shape[0] > 0:
     # st.write(peaks)
     # go again
     # st.write(peak, peaks.loc[peaks[peaks.peak == peak.index.tolist()[0]], 'micro_volts'])
-st.write(max, peaks.shape[0], peaks)
+# st.write(max, peaks.shape[0], peaks)
 
-st.write(ekg)
+# st.write(ekg)
 x = ekg.seconds
 y = ekg.micro_volts
 time0 = time.time()
