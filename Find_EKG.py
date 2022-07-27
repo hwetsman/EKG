@@ -38,6 +38,7 @@ def Clean_EKG(ekg):
     ekg.micro_volts = ekg.micro_volts.astype(float)
     ekg['seconds'] = ekg.index * 1/510.227
     ekg = ekg[['micro_volts', 'seconds']]
+    ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
     return ekg
 
 
@@ -61,22 +62,17 @@ st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]
 # a.write(ekg_df.head(1))
 
 # select and clean EKG to show
-# st.write(list(set(ekg_df.clas.tolist())))
 ekg = Get_EKG(ekg_str)
 this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
 st.write(f'You have selected {ekg_str}, classified as {this_classification}')
 ekg = Clean_EKG(ekg)
 
 # plot EKG
-
-ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
-# max = ekg.peak.max()
-# st.write(max)
+# ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
+# find the ekg max
 maxes = ekg.nlargest(200, 'peak')
-st.write(maxes)
 max = maxes.peak.median()
-st.write(max)
-peaks = ekg[ekg.peak > 0.6*max]
+peaks = ekg[ekg.peak > 0.5*max]
 singles = pd.DataFrame()
 while peaks.shape[0] > 0:
     peak = peaks.iloc[0, 1]
