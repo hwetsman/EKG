@@ -107,7 +107,7 @@ singles['interval'] = singles.seconds.shift(-1) - singles.seconds
 median = singles.interval.median()
 st.write(type(median))
 singles['med'] = median
-singles['diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
+singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
 st.write(singles)
 fig, ax = plt.subplots(figsize=(15, 4))
 plt.hist(singles.interval, bins=30)
