@@ -76,10 +76,32 @@ a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
 ekg_df = pd.read_csv('EKGs.csv')
 poor = ekg_df[ekg_df.clas == 'Poor Recording']
 ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
-year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
-select_df = ekg_df[ekg_df.name.str.contains(year)]
-ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
 st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
+
+if 'PACs' not in ekg_df.columns:
+    for idx, row in ekg_df.iterrows():
+        ekg_str = ekg_df.loc[idx, 'name']
+        ekg = Get_EKG(ekg_str)
+        this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
+        a.write(f'I am working {ekg_str}, classified as {this_classification}')
+        ekg = Clean_EKG(ekg)
+        maxes = ekg.nlargest(200, 'peak')
+        max = maxes.peak.median()
+        peaks = ekg[ekg.peak > 0.5*max]
+        singles = Get_Singles(peaks)
+        PACs = Get_PACs(singles)
+        a.write(f'The EKG evidences {PACs} PACs')
+        ekg_df.loc[idx, 'PACs'] = PACs
+
+    st.write(ekg_df)
+    ekg_df.to_csv('EKGs.csv', index=False)
+else:
+    year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
+    months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    month = st.sidebar.selectbox('Month of EKG', months)
+    select_df = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
+    ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
+
 
 # select and clean EKG to show
 ekg = Get_EKG(ekg_str)
@@ -107,3 +129,10 @@ time1 = time.time()
 
 PACs = Get_PACs(singles)
 st.write(f'The EKG evidences {PACs} PACs')
+
+# st.write(ekg_df)
+fig, ax = plt.subplots(figsize=(15, 4))
+ax.set_title('PACs in 30 Second EKGs by Date')
+ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70)
+plt.plot(ekg_df.date, ekg_df.PACs)
+st.pyplot(fig)
