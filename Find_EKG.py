@@ -35,7 +35,7 @@ def Clean_EKG(ekg):
     ekg.reset_index(inplace=True, drop=False)
     ekg.columns = ['micro_volts', 'ignore']
     ekg.micro_volts = ekg.micro_volts.astype(float)
-    # st.write(ekg)
+    ekg['seconds'] = ekg.index * 1/510.227
     return ekg
 
 
@@ -66,34 +66,20 @@ st.write(f'You have selected {ekg_str}, classified as {this_classification}')
 ekg = Clean_EKG(ekg)
 
 # plot EKG
-ekg['seconds'] = ekg.index * 1/510.227
+# ekg['seconds'] = ekg.index * 1/510.227
 ekg = ekg[['micro_volts', 'seconds']]
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
 max = ekg.peak.max()
 peaks = ekg[ekg.peak > 0.5*max]
-# st.write(peaks.seconds)
 singles = pd.DataFrame()
 while peaks.shape[0] > 0:
-    # for i in range(4):
-    # st.write('peaks', peaks)
     peak = peaks.iloc[0, 1]
-    # st.write(peak, peak+.4, peak-.4)
     group = peaks.loc[peaks.seconds < peak+.4]
-    # st.write('group', group)
-    # find max row of group
     single = group[group.peak == group.peak.max()]
-    # st.write('single', single)
-    # add max row to new df
     singles = pd.concat([singles, single])
-    # st.write('singles', singles)
-    # subtract group from peaks
     peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
-    # st.write(peaks)
-    # go again
-    # st.write(peak, peaks.loc[peaks[peaks.peak == peak.index.tolist()[0]], 'micro_volts'])
-# st.write(max, peaks.shape[0], peaks)
 
-# st.write(ekg)
+# plot
 x = ekg.seconds
 y = ekg.micro_volts
 time0 = time.time()
