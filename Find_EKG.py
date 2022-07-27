@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import streamlit as st
 import time
+import numpy as np
 
 
 def Create_EKG_DF(ekgs):
@@ -67,11 +68,15 @@ st.write(f'You have selected {ekg_str}, classified as {this_classification}')
 ekg = Clean_EKG(ekg)
 
 # plot EKG
-# ekg['seconds'] = ekg.index * 1/510.227
-# ekg = ekg[['micro_volts', 'seconds']]
+
 ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
-max = ekg.peak.max()
-peaks = ekg[ekg.peak > 0.5*max]
+# max = ekg.peak.max()
+# st.write(max)
+maxes = ekg.nlargest(200, 'peak')
+st.write(maxes)
+max = maxes.peak.median()
+st.write(max)
+peaks = ekg[ekg.peak > 0.6*max]
 singles = pd.DataFrame()
 while peaks.shape[0] > 0:
     peak = peaks.iloc[0, 1]
