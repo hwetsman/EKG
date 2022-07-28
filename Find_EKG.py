@@ -22,6 +22,8 @@ def Create_EKG_DF(ekgs):
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
     ekg_df.to_csv('EKGs.csv', index=False)
+    st.write('I have finished writing EKGs.csv. Try another function!')
+    return ekg_df
 
 
 def Get_EKG(name):
@@ -67,72 +69,90 @@ a = st.empty()
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
+function = st.sidebar.selectbox(
+    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'])
 a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
-
+ekg_df = pd.read_csv('EKGs.csv')
 # create ekg df
 #############skip for now#################
-# Create_EKG_DF(ekgs)
+if function == 'Reset EKG Database':
+    ekg_df = Create_EKG_DF(ekgs)
 ##########################################
-ekg_df = pd.read_csv('EKGs.csv')
-poor = ekg_df[ekg_df.clas == 'Poor Recording']
-ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
-st.write(f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
+elif function == 'Show PACs Over Time':
+    # ekg_df = pd.read_csv('EKGs.csv')
+    poor = ekg_df[ekg_df.clas == 'Poor Recording']
+    ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
+    st.write(
+        f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
 
-if 'PACs' not in ekg_df.columns:
-    for idx, row in ekg_df.iterrows():
-        ekg_str = ekg_df.loc[idx, 'name']
-        ekg = Get_EKG(ekg_str)
-        this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
-        a.write(f'I am working {ekg_str}, classified as {this_classification}')
-        ekg = Clean_EKG(ekg)
-        maxes = ekg.nlargest(200, 'peak')
-        max = maxes.peak.median()
-        peaks = ekg[ekg.peak > 0.5*max]
-        singles = Get_Singles(peaks)
-        PACs = Get_PACs(singles)
-        a.write(f'The EKG evidences {PACs} PACs')
-        ekg_df.loc[idx, 'PACs'] = PACs
+    if 'PACs' not in ekg_df.columns:
+        for idx, row in ekg_df.iterrows():
+            ekg_str = ekg_df.loc[idx, 'name']
+            ekg = Get_EKG(ekg_str)
+            this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
+                0], 'clas']
+            a.write(f'I am working {ekg_str}, classified as {this_classification}')
+            ekg = Clean_EKG(ekg)
+            maxes = ekg.nlargest(200, 'peak')
+            max = maxes.peak.median()
+            peaks = ekg[ekg.peak > 0.5*max]
+            singles = Get_Singles(peaks)
+            PACs = Get_PACs(singles)
+            a.write(f'The EKG evidences {PACs} PACs')
+            ekg_df.loc[idx, 'PACs'] = PACs
 
-    st.write(ekg_df)
-    ekg_df.to_csv('EKGs.csv', index=False)
-else:
+        # st.write(ekg_df)
+        ekg_df.to_csv('EKGs.csv', index=False)
+
+        fig, ax = plt.subplots(figsize=(15, 4))
+        ax.set_title('PACs in 30 Second EKGs by Date')
+        ax.set_ylabel('Number of PACs')
+        ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70)
+        plt.plot(ekg_df.date, ekg_df.PACs)
+        st.pyplot(fig)
+    else:
+        year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
+        months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+        month = st.sidebar.selectbox('Month of EKG', months)
+        select_df = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
+        ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
+
+elif function == 'Show an EKG':
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
-    months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-    month = st.sidebar.selectbox('Month of EKG', months)
-    select_df = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
-    ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
-
-
+    month = st.sidebar.selectbox(
+        'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
+    ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
+    ekg_str = st.sidebar.selectbox('Choose an EKG', ekgs)
 # select and clean EKG to show
-ekg = Get_EKG(ekg_str)
-this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
-st.write(f'You have selected {ekg_str}, classified as {this_classification}')
-ekg = Clean_EKG(ekg)
+    ekg = Get_EKG(ekg_str)
+    this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
+    st.write(f'You have selected {ekg_str}, classified as {this_classification}')
+    ekg = Clean_EKG(ekg)
 
+    # find the ekg peaks
+    maxes = ekg.nlargest(200, 'peak')
+    max = maxes.peak.median()
+    peaks = ekg[ekg.peak > 0.5*max]
+    # get single peaks
+    singles = Get_Singles(peaks)
 
-# find the ekg peaks
-maxes = ekg.nlargest(200, 'peak')
-max = maxes.peak.median()
-peaks = ekg[ekg.peak > 0.5*max]
-# get single peaks
-singles = Get_Singles(peaks)
+    # plot EKG
+    x = ekg.seconds
+    y = ekg.micro_volts
+    time0 = time.time()
+    fig, ax = plt.subplots(figsize=(15, 4))
+    ax.set_ylim(y.min(), y.max())
+    plt.plot(x, y)
+    st.pyplot(fig)
+    # time1 = time.time()
 
-# plot EKG
-x = ekg.seconds
-y = ekg.micro_volts
-time0 = time.time()
-fig, ax = plt.subplots(figsize=(15, 4))
-ax.set_ylim(y.min(), y.max())
-plt.plot(x, y)
-st.pyplot(fig)
-time1 = time.time()
-
-PACs = Get_PACs(singles)
-st.write(f'The EKG evidences {PACs} PACs')
+    PACs = Get_PACs(singles)
+    st.write(f'The EKG evidences {PACs} PACs')
 
 # st.write(ekg_df)
-fig, ax = plt.subplots(figsize=(15, 4))
-ax.set_title('PACs in 30 Second EKGs by Date')
-ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70)
-plt.plot(ekg_df.date, ekg_df.PACs)
-st.pyplot(fig)
+# fig, ax = plt.subplots(figsize=(15, 4))
+# ax.set_title('PACs in 30 Second EKGs by Date')
+# ax.set_ylabel('Number of PACs')
+# ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70)
+# plt.plot(ekg_df.date, ekg_df.PACs)
+# st.pyplot(fig)
