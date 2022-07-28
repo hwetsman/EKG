@@ -170,6 +170,16 @@ elif function == 'Show an EKG':
     time0 = time.time()
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
+    if type == 'Atrial Fibrillation':
+        ax.set_facecolor('xkcd:salmon')
+    elif type == 'Inconclusive':
+        ax.set_facecolor('xkcd:gold')
+    elif type == 'Heart Rate Over 120':
+        ax.set_facecolor('xkcd:gold')
+    elif type == 'Heart Rate Under 50':
+        ax.set_facecolor('xkcd:gold')
+    elif type == 'Heart Rate Over 150':
+        ax.set_facecolor('xkcd:salmon')
     plt.plot(x, y)
     st.pyplot(fig)
     # time1 = time.time()
