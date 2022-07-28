@@ -116,9 +116,6 @@ elif function == 'Show PACs Over Time':
     x_range['day'] = x_range.date.str[0:10]
     x_range.reset_index(inplace=True, drop=True)
     x_range = x_range['day']
-    # st.write(x_range)
-    # ekg_df.reset_index(inplace=True, drop=True)
-    # st.write(ekg_df)
 
     afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
     afib['day'] = afib.date.str[0:10]
@@ -131,42 +128,21 @@ elif function == 'Show PACs Over Time':
 
     plot_df.day = pd.to_datetime(plot_df.day)
     plot_df.sort_values(by='day', inplace=True)
-    # st.write(plot_df)
-    fig, ax = plt.subplots(figsize=(15, 8))
+    fig, ax = plt.subplots(figsize=(15, 4))
 
     ax.set_ylabel('Number of PACs')
-    # plt.bar(hist_df.index, hist_df.PACs)
     plt.bar(plot_df.day, plot_df.PACs)
-    # plt.bar(hist_df.index, x)
     ax.set_xticks(plot_df.day[::20], label=plot_df.day[::20])
     plt.xticks(rotation=70, ha='right')
 
     if afib.shape[0] > 0:
         for day in list(set(afib.day.tolist())):
-            plt.vlines(day, 0, 20, colors='r', alpha=.3)
+            plt.vlines(day, 0, 15, colors='r', alpha=.1)
         ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
     else:
         ax.set_title('Maximum PACs in 30 Second EKGs by Date')
     st.pyplot(fig)
-    # else:
-    #     afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
-    #     afib['day'] = afib.date.str[0:10]
-    #     hist_df = ekg_df.groupby(by='day').max()
-    #     hist_df['day'] = hist_df.date.str[0:10]
-    #     fig, ax = plt.subplots(figsize=(15, 8))
-    #
-    #     ax.set_ylabel('Number of PACs')
-    #     plt.bar(hist_df.index, hist_df.PACs)
-    #     ax.set_xticks(hist_df.index[::15], label=hist_df.day[::15])
-    #     plt.xticks(rotation=70, ha='right')
-    #
-    #     if afib.shape[0] > 0:
-    #         for day in list(set(afib.day.tolist())):
-    #             plt.vlines(day, 0, 20, colors='r', alpha=.3)
-    #         ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
-    #     else:
-    #         ax.set_title('Maximum PACs in 30 Second EKGs by Date')
-    #     st.pyplot(fig)
+
 ##########################################
 elif function == 'Show an EKG':
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
