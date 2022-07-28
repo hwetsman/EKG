@@ -118,7 +118,7 @@ elif function == 'Show PACs Over Time':
         ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
 
 elif function == 'Show an EKG':
-    year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
+    year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
     month = st.sidebar.selectbox(
         'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
     ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
