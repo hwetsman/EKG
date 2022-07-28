@@ -19,10 +19,12 @@ def Create_EKG_DF(ekgs):
         ekg_df.loc[i, 'date'] = date
         ekg_df.loc[i, 'clas'] = classification
         ekg_df.loc[i, 'vers'] = version
+    ekg_df['day'] = ekg_df.date.str[0:10]
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
     ekg_df.to_csv('EKGs.csv', index=False)
     st.write('I have finished writing EKGs.csv. Try another function!')
+    st.write(ekg_df)
     return ekg_df
 
 
@@ -102,26 +104,36 @@ elif function == 'Show PACs Over Time':
             ekg_df.loc[idx, 'PACs'] = PACs
 
         # st.write(ekg_df)
+        # ekg_df['label'] = ekg_df.name + str(ekg_df.PACs)
         ekg_df.to_csv('EKGs.csv', index=False)
 
+        # try to get PACs and number of EKG by day
+
+        # grouper = ekg_df.groupby([pd.Grouper(freq='1D'), 'PACs'])
+
+        afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
+        st.write(afib)
+        hist_df = ekg_df.groupby(by='day').max()
         fig, ax = plt.subplots(figsize=(15, 4))
-        ax.set_title('PACs in 30 Second EKGs by Date')
+        ax.set_title('Maximum PACs in 30 Second EKGs by Date')
         ax.set_ylabel('Number of PACs')
-        ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70, ha='right')
-        plt.plot(ekg_df.date, ekg_df.PACs)
+        # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
+        # plt.bar(ekg_df.date, ekg_df.PACs)
+        plt.bar(hist_df.index, hist_df.PACs)
         st.pyplot(fig)
     else:
+        afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
+        st.write(afib)
+        hist_df = ekg_df.groupby(by='day').max()
+        # st.write(hist_df)
         fig, ax = plt.subplots(figsize=(15, 4))
-        ax.set_title('PACs in 30 Second EKGs by Date')
+        ax.set_title('Maximum PACs in 30 Second EKGs by Date')
         ax.set_ylabel('Number of PACs')
-        ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70, ha='right')
-        plt.plot(ekg_df.date, ekg_df.PACs)
+        # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
+        plt.bar(hist_df.index, hist_df.PACs)
+        # plt.bar(ekg_df.date, ekg_df.PACs)
         st.pyplot(fig)
-        # year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'])
-        # months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-        # month = st.sidebar.selectbox('Month of EKG', months)
-        # select_df = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
-        # ekg_str = st.sidebar.selectbox('Select EKG', select_df.name.tolist(), index=0)
+
 
 elif function == 'Show an EKG':
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
