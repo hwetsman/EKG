@@ -115,11 +115,17 @@ elif function == 'Show PACs Over Time':
         st.write(afib)
         hist_df = ekg_df.groupby(by='day').max()
         fig, ax = plt.subplots(figsize=(15, 4))
-        ax.set_title('Maximum PACs in 30 Second EKGs by Date')
+
         ax.set_ylabel('Number of PACs')
         # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
         # plt.bar(ekg_df.date, ekg_df.PACs)
         plt.bar(hist_df.index, hist_df.PACs)
+        if afib.shape[0] > 0:
+            for day in list(set(afib.day.tolist())):
+                plt.vlines(day, 0, 20, colors='r', alpha=.3)
+            ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
+        else:
+            ax.set_title('Maximum PACs in 30 Second EKGs by Date')
         st.pyplot(fig)
     else:
         afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
@@ -131,6 +137,12 @@ elif function == 'Show PACs Over Time':
         ax.set_ylabel('Number of PACs')
         # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
         plt.bar(hist_df.index, hist_df.PACs)
+        if afib.shape[0] > 0:
+            for day in list(set(afib.day.tolist())):
+                plt.vlines(day, 0, 20, colors='r', alpha=.3)
+            ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
+        else:
+            ax.set_title('Maximum PACs in 30 Second EKGs by Date')
         # plt.bar(ekg_df.date, ekg_df.PACs)
         st.pyplot(fig)
 
