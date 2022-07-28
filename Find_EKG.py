@@ -142,14 +142,15 @@ elif function == 'Show PACs Over Time':
         else:
             ax.set_title('Maximum PACs in 30 Second EKGs by Date')
         st.pyplot(fig)
-
-
+##########################################
 elif function == 'Show an EKG':
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
     month = st.sidebar.selectbox(
         'Month of EKG', ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
     ekgs = ekg_df[ekg_df.name.str.contains(year+'-'+month)]
-    ekg_str = st.sidebar.selectbox('Choose an EKG', ekgs)
+    type = st.sidebar.selectbox('Classification', list(set(ekgs.clas.tolist())))
+    show_df = ekgs[ekgs.clas == type]
+    ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
 # select and clean EKG to show
     ekg = Get_EKG(ekg_str)
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
