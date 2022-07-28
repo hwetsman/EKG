@@ -103,23 +103,19 @@ elif function == 'Show PACs Over Time':
             a.write(f'The EKG evidences {PACs} PACs')
             ekg_df.loc[idx, 'PACs'] = PACs
 
-        # st.write(ekg_df)
-        # ekg_df['label'] = ekg_df.name + str(ekg_df.PACs)
         ekg_df.to_csv('EKGs.csv', index=False)
 
-        # try to get PACs and number of EKG by day
-
-        # grouper = ekg_df.groupby([pd.Grouper(freq='1D'), 'PACs'])
-
         afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
-        st.write(afib)
+        afib['day'] = afib.date.str[0:10]
         hist_df = ekg_df.groupby(by='day').max()
-        fig, ax = plt.subplots(figsize=(15, 4))
+        hist_df['day'] = hist_df.date.str[0:10]
+        fig, ax = plt.subplots(figsize=(15, 8))
 
         ax.set_ylabel('Number of PACs')
-        # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
-        # plt.bar(ekg_df.date, ekg_df.PACs)
         plt.bar(hist_df.index, hist_df.PACs)
+        ax.set_xticks(hist_df.index[::15], label=hist_df.day[::15])
+        plt.xticks(rotation=70, ha='right')
+
         if afib.shape[0] > 0:
             for day in list(set(afib.day.tolist())):
                 plt.vlines(day, 0, 20, colors='r', alpha=.3)
@@ -129,21 +125,22 @@ elif function == 'Show PACs Over Time':
         st.pyplot(fig)
     else:
         afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
-        st.write(afib)
+        afib['day'] = afib.date.str[0:10]
         hist_df = ekg_df.groupby(by='day').max()
-        # st.write(hist_df)
-        fig, ax = plt.subplots(figsize=(15, 4))
-        ax.set_title('Maximum PACs in 30 Second EKGs by Date')
+        hist_df['day'] = hist_df.date.str[0:10]
+        fig, ax = plt.subplots(figsize=(15, 8))
+
         ax.set_ylabel('Number of PACs')
-        # ax.set_xticks(ekg_df.index[::20], labels=ekg_df.day[::20], rotation=70, ha='right')
         plt.bar(hist_df.index, hist_df.PACs)
+        ax.set_xticks(hist_df.index[::15], label=hist_df.day[::15])
+        plt.xticks(rotation=70, ha='right')
+
         if afib.shape[0] > 0:
             for day in list(set(afib.day.tolist())):
                 plt.vlines(day, 0, 20, colors='r', alpha=.3)
             ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
         else:
             ax.set_title('Maximum PACs in 30 Second EKGs by Date')
-        # plt.bar(ekg_df.date, ekg_df.PACs)
         st.pyplot(fig)
 
 
