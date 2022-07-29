@@ -85,7 +85,7 @@ elif function == 'Show PACs Over Time':
     poor = ekg_df[ekg_df.clas == 'Poor Recording']
     ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
     st.write(
-        f'There are {ekg_df.shape[0]} EKGs after eliminating the {poor.shape[0]} poor recordings.')
+        f'There are {ekg_df.shape[0]} EKGs with good recordings.')
 
     if 'PACs' not in ekg_df.columns:
         for idx, row in ekg_df.iterrows():
@@ -128,7 +128,7 @@ elif function == 'Show PACs Over Time':
 
     plot_df.day = pd.to_datetime(plot_df.day)
     plot_df.sort_values(by='day', inplace=True)
-    fig, ax = plt.subplots(figsize=(15, 4))
+    fig, ax = plt.subplots(figsize=(15, 8))
 
     ax.set_ylabel('Number of PACs')
     plt.bar(plot_df.day, plot_df.PACs)
