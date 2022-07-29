@@ -121,6 +121,10 @@ elif function == 'Show PACs Over Time':
     afib = ekg_df[ekg_df.clas == 'Atrial Fibrillation']
     afib['day'] = afib.date.str[0:10]
     afib.day = pd.to_datetime(afib.day)
+    afib['afib'] = 1
+    afib.drop_duplicates(subset='day', inplace=True)
+    afib = afib[['afib', 'day']]
+    # st.write(afib)
     hist_df = ekg_df.groupby(by='day').max()
     hist_df['day'] = hist_df.date.str[0:10]
     hist_df.reset_index(inplace=True, drop=True)
@@ -129,11 +133,19 @@ elif function == 'Show PACs Over Time':
 
     plot_df.day = pd.to_datetime(plot_df.day)
     plot_df.sort_values(by='day', inplace=True)
-    fig, ax = plt.subplots(figsize=(15, 8))
+    # impute 0 PACs
+    plot_df.PACs.fillna(0, inplace=True)
+    plot_df.PACs = plot_df.PACs.astype(int)
 
+    export = pd.merge(plot_df, afib, on='day', how='outer')
+    export.afib = export.afib.fillna(0)
+    export.afib = export.afib.astype(int)
+    export = export[['day', 'PACs', 'afib']]
+
+    fig, ax = plt.subplots(figsize=(15, 8))
     ax.set_ylabel('Number of PACs')
-    plt.bar(plot_df.day, plot_df.PACs)
-    ax.set_xticks(plot_df.day[::20], label=plot_df.day[::20])
+    plt.bar(export.day, export.PACs)
+    ax.set_xticks(export.day[::20], label=export.day[::20])
     plt.xticks(rotation=70, ha='right')
 
     if afib.shape[0] > 0:
@@ -143,7 +155,8 @@ elif function == 'Show PACs Over Time':
     else:
         ax.set_title('Maximum PACs in 30 Second EKGs by Date')
     st.pyplot(fig)
-
+    st.write('I have written the export file for this figure to EKG_by_day.csv')
+    export.to_csv('EKG_by_day.csv', index=False)
 ##########################################
 elif function == 'Show an EKG':
     year = st.sidebar.selectbox('Year of EKG', ['2019', '2020', '2021', '2022'], index=1)
