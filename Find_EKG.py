@@ -124,16 +124,14 @@ elif function == 'Show PACs Over Time':
     afib['afib'] = 1
     afib.drop_duplicates(subset='day', inplace=True)
     afib = afib[['afib', 'day']]
-    # st.write(afib)
-    hist_df = ekg_df.groupby(by='day').max()
-    hist_df['day'] = hist_df.date.str[0:10]
-    hist_df.reset_index(inplace=True, drop=True)
 
-    plot_df = pd.merge(hist_df, x_range, on='day', how='outer')
+    temp = ekg_df.groupby(by='day').max()
+    temp['day'] = temp.date.str[0:10]
+    temp.reset_index(inplace=True, drop=True)
 
+    plot_df = pd.merge(temp, x_range, on='day', how='outer')
     plot_df.day = pd.to_datetime(plot_df.day)
     plot_df.sort_values(by='day', inplace=True)
-    # impute 0 PACs
     plot_df.PACs.fillna(0, inplace=True)
     plot_df.PACs = plot_df.PACs.astype(int)
 
@@ -142,15 +140,24 @@ elif function == 'Show PACs Over Time':
     export.afib = export.afib.astype(int)
     export = export[['day', 'PACs', 'afib']]
 
+    how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
+
+    # if how =='Bar':
+
     fig, ax = plt.subplots(figsize=(15, 8))
     ax.set_ylabel('Number of PACs')
-    plt.bar(export.day, export.PACs)
+    if how == 'Bar':
+        plt.bar(export.day, export.PACs)
+    else:
+        n = st.sidebar.slider('Number of Days Rolling', min_value=1, max_value=30, value=5)
+        plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
+        plt.plot(plot_df.day, plot_df.avg)
     ax.set_xticks(export.day[::20], label=export.day[::20])
     plt.xticks(rotation=70, ha='right')
 
     if afib.shape[0] > 0:
         for day in list(set(afib.day.tolist())):
-            plt.vlines(day, 0, 15, colors='r', alpha=.1)
+            plt.vlines(day, 0, 15, colors='r', alpha=.2)
         ax.set_title('Maximum PACs in 30 Second EKGs by Date - Days with AFib in Red')
     else:
         ax.set_title('Maximum PACs in 30 Second EKGs by Date')
