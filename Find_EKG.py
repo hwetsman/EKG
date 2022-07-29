@@ -70,17 +70,17 @@ def Get_PACs(singles):
 
 
 # create streamlit page
-a = st.empty()
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 function = st.sidebar.selectbox(
     'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'])
-a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
 ekg_df = pd.read_csv('EKGs.csv')
 # create ekg df
 #############skip for now#################
 if function == 'Reset EKG Database':
+    a = st.empty()
+    a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
     ekg_df = Create_EKG_DF(ekgs)
     a.write('I have finished writing EKGs.csv. Try another function!')
 ##########################################
@@ -88,25 +88,32 @@ elif function == 'Show PACs Over Time':
     ekg_df = pd.read_csv('EKGs.csv')
     poor = ekg_df[ekg_df.clas == 'Poor Recording']
     ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
-    st.write(
-        f'There are {ekg_df.shape[0]} EKGs with good recordings.')
+    ekg_df.reset_index(inplace=True, drop=True)
+
+    # st.write(
+    #     f'There are {ekg_df.shape[0]} EKGs with good recordings.')
 
     if 'PACs' not in ekg_df.columns:
+        a = st.empty()
+        a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
+        prog_bar = st.progress(0)
         for idx, row in ekg_df.iterrows():
+            prog_bar.progress((idx)/ekg_df.shape[0])
             ekg_str = ekg_df.loc[idx, 'name']
             ekg = Get_EKG(ekg_str)
             this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
                 0], 'clas']
-            a.write(f'I am working {ekg_str}, classified as {this_classification}')
+            # a.write(f'I am working {ekg_str}, classified as {this_classification}')
             ekg = Clean_EKG(ekg)
             maxes = ekg.nlargest(200, 'peak')
             max = maxes.peak.median()
             peaks = ekg[ekg.peak > 0.5*max]
             singles = Get_Singles(peaks)
             PACs = Get_PACs(singles)
-            a.write(f'The EKG evidences {PACs} PACs')
+            # a.write(f'The EKG evidences {PACs} PACs')
             ekg_df.loc[idx, 'PACs'] = PACs
-
+        prog_bar.empty()
+        a.empty()
         ekg_df.to_csv('EKGs.csv', index=False)
     else:
         pass
