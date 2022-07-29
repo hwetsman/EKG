@@ -142,8 +142,6 @@ elif function == 'Show PACs Over Time':
 
     how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
 
-    # if how =='Bar':
-
     fig, ax = plt.subplots(figsize=(15, 8))
     ax.set_ylabel('Number of PACs')
     if how == 'Bar':
