@@ -184,6 +184,14 @@ elif function == 'Show an EKG':
     # get single peaks
     singles = Get_Singles(peaks)
 
+    # try to add rate
+    # get rate
+    # st.write(singles)
+    # median_df = singles.copy()
+    # median_df['interval'] = median_df.seconds.shift(-1) - median_df.seconds
+    # rate = 60/median_df.interval.median()
+    # st.write(rate)
+
     # plot EKG
     x = ekg.seconds
     y = ekg.micro_volts
@@ -213,7 +221,8 @@ elif function == 'Show an EKG':
     plt.plot(x, y)
     st.pyplot(fig)
     # time1 = time.time()
-    st.write(f'The EKG evidences {PACs} PACs')
+    if type not in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Heart Rate Over 120']:
+        st.write(f'The EKG evidences {PACs} PACs')
 
 
 # st.write(ekg_df)
