@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import time
 import numpy as np
+import seaborn as sns
 
 
 def Create_EKG_DF(ekgs):
@@ -171,22 +172,31 @@ elif function == 'Show an EKG':
     time0 = time.time()
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
+
+    PACs = Get_PACs(singles)
+
+    level = int(round(3*PACs/14, 0))
+    color_palette = sns.color_palette('RdYlGn_r')
+
     if type == 'Atrial Fibrillation':
-        ax.set_facecolor('xkcd:salmon')
+        ax.set_facecolor(color_palette[5])
+        # ax.set_facecolor('xkcd:salmon')
     elif type == 'Inconclusive':
-        ax.set_facecolor('xkcd:gold')
+        ax.set_facecolor(color_palette[4])
     elif type == 'Heart Rate Over 120':
-        ax.set_facecolor('xkcd:gold')
+        ax.set_facecolor(color_palette[4])
     elif type == 'Heart Rate Under 50':
-        ax.set_facecolor('xkcd:gold')
+        ax.set_facecolor(color_palette[4])
     elif type == 'Heart Rate Over 150':
-        ax.set_facecolor('xkcd:salmon')
+        ax.set_facecolor(color_palette[5])
+    else:
+        ax.set_facecolor(color_palette[level])
+
     plt.plot(x, y)
     st.pyplot(fig)
     # time1 = time.time()
-
-    PACs = Get_PACs(singles)
     st.write(f'The EKG evidences {PACs} PACs')
+
 
 # st.write(ekg_df)
 # fig, ax = plt.subplots(figsize=(15, 4))
