@@ -9,8 +9,10 @@ import seaborn as sns
 
 def Create_EKG_DF(ekgs):
     ekg_df = pd.DataFrame()
+    prog_bar = st.progress(0)
     for i in range(len(ekgs)):
         file = dir+'/'+ekgs[i]
+        prog_bar.progress(i/len(ekgs))
         example = pd.read_csv(file)
         dob = example.loc['Date of Birth', 'Name']
         date = example.loc['Recorded Date', 'Name']
@@ -24,8 +26,8 @@ def Create_EKG_DF(ekgs):
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
     ekg_df.to_csv('EKGs.csv', index=False)
-    st.write('I have finished writing EKGs.csv. Try another function!')
-    st.write(ekg_df)
+    # st.write('I have finished writing EKGs.csv. Try another function!')
+    # st.write(ekg_df)
     return ekg_df
 
 
@@ -80,6 +82,7 @@ ekg_df = pd.read_csv('EKGs.csv')
 #############skip for now#################
 if function == 'Reset EKG Database':
     ekg_df = Create_EKG_DF(ekgs)
+    a.write('I have finished writing EKGs.csv. Try another function!')
 ##########################################
 elif function == 'Show PACs Over Time':
     ekg_df = pd.read_csv('EKGs.csv')
