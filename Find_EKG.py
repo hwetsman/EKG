@@ -280,6 +280,8 @@ elif function == 'Show an EKG':
     # time1 = time.time()
     if type not in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Heart Rate Over 120']:
         st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+    else:
+        st.write(f'The EKG appears to have a rate of {rate}')
 
 
 # st.write(ekg_df)
