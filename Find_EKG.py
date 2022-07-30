@@ -47,23 +47,24 @@ def Clean_EKG(ekg):
     ekg = ekg[['micro_volts', 'seconds']]
     ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
     ekg['interval'] = ekg.micro_volts - ekg.micro_volts.shift(-1)
-    fig, ax = plt.subplots(figsize=(15, 10))
+    ekg = Get_R_Peaks(ekg)
+    return ekg
+
+
+def Get_R_Peaks(ekg):
     # identify QRS complexes
     ekg['qrs'] = 0
-    size = st.sidebar.slider('size', min_value=1, max_value=35, value=5)
+    # size = st.sidebar.slider('size', min_value=1, max_value=35, value=5)
     for i in range(ekg.shape[0]):
         numbers = ekg.interval[i:i+5]
         if numbers.max()-numbers.min() > 50:
             ekg.loc[i, 'qrs'] = 1
-
     # # identify QRS peaks
     ekg['int_peak'] = 0
     ekg['r_peak'] = 0
-    st.write(ekg)
     qrs_idices = ekg[ekg.qrs == 1].index.tolist()
     # get interim r_peak
     for idx in qrs_idices:
-        # st.write(idx)
         diffs = ekg.micro_volts[idx-5:idx+5]
         if diffs.max()-diffs.min() > 500:
             ekg.loc[diffs.idxmax(), 'int_peak'] = 1
@@ -71,20 +72,7 @@ def Clean_EKG(ekg):
     for idx in int_peak_indices:
         diffs = ekg.micro_volts[idx-5:idx+5]
         ekg.loc[diffs.idxmax(), 'r_peak'] = 1
-    st.write(ekg)
-
-    plt.plot(ekg.index, ekg.micro_volts)
-    for i in range(ekg.shape[0]):
-        if ekg.loc[i, 'r_peak'] == 1:
-            # if ekg.loc[i, 'qrs'] == 1:
-            plt.vlines(i, ymax=100, ymin=0, colors='r')
-    # plt.plot(ekg.index, ekg.qrs, c='r')
-    # ax.set_xlim(left=ekg.index[25], right=ekg.index[50])
-    #
-    # ax.set_xticks(ekg.index[start:end], labels=ekg.seconds[start:end], rotation=70)
-    # plt.xticks(rotation=70)
-    st.pyplot(fig)
-    st.write(ekg)
+    ekg = ekg[['micro_volts', 'seconds', 'peak', 'interval', 'qrs', 'r_peak']]
     return ekg
 
 
@@ -226,6 +214,15 @@ elif function == 'Show an EKG':
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
+
+    fig, ax = plt.subplots(figsize=(15, 10))
+    plt.plot(ekg.index, ekg.micro_volts)
+    for i in range(ekg.shape[0]):
+        if ekg.loc[i, 'r_peak'] == 1:
+            # if ekg.loc[i, 'qrs'] == 1:
+            plt.vlines(i, ymax=100, ymin=0, colors='r')
+    st.pyplot(fig)
+    st.write(ekg)
 
     # find the ekg peaks
     maxes = ekg.nlargest(200, 'peak')
