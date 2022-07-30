@@ -77,13 +77,14 @@ def Get_R_Peaks(ekg):
 
 
 def Get_Singles(peaks):
-    singles = pd.DataFrame()
-    while peaks.shape[0] > 0:
-        peak = peaks.iloc[0, 1]
-        group = peaks.loc[peaks.seconds < peak+.4]
-        single = group[group.peak == group.peak.max()]
-        singles = pd.concat([singles, single])
-        peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    # singles = pd.DataFrame()
+    singles = ekg[ekg.r_peak == 1]
+    # while peaks.shape[0] > 0:
+    #     peak = peaks.iloc[0, 1]
+    #     group = peaks.loc[peaks.seconds < peak+.4]
+    #     single = group[group.peak == group.peak.max()]
+    #     singles = pd.concat([singles, single])
+    #     peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
     return singles
 
 
@@ -215,6 +216,7 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
+# temporary visualization of feature dev
     fig, ax = plt.subplots(figsize=(15, 10))
     plt.plot(ekg.index, ekg.micro_volts)
     for i in range(ekg.shape[0]):
@@ -230,14 +232,9 @@ elif function == 'Show an EKG':
     peaks = ekg[ekg.peak > 0.5*max]
     # get single peaks
     singles = Get_Singles(peaks)
-
+    st.write(singles)
     # try to add rate
     # get rate
-    # st.write(singles)
-    # median_df = singles.copy()
-    # median_df['interval'] = median_df.seconds.shift(-1) - median_df.seconds
-    # rate = 60/median_df.interval.median()
-    # st.write(rate)
 
     # plot EKG
     x = ekg.seconds
