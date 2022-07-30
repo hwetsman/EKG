@@ -239,9 +239,9 @@ elif function == 'Show an EKG':
     st.write(ekg)
 
     # find the ekg peaks
-    maxes = ekg.nlargest(200, 'peak')
-    max = maxes.peak.median()
-    peaks = ekg[ekg.peak > 0.5*max]
+    # maxes = ekg.nlargest(200, 'peak')
+    # max = maxes.peak.median()
+    # peaks = ekg[ekg.peak > 0.5*max]
     # get single peaks
     singles = Get_Singles(ekg)
     # st.write(singles)
