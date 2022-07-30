@@ -102,6 +102,13 @@ def Get_PACs(singles):
     return PACs
 
 
+def Get_Rate(singles):
+    singles['r_interval'] = singles.seconds - singles.seconds.shift(1)
+    med = singles.r_interval.median()
+    rate = int(58.3/med)
+    return rate
+
+
 # create streamlit page
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
@@ -227,7 +234,7 @@ elif function == 'Show an EKG':
     for i in range(ekg.shape[0]):
         if ekg.loc[i, 'r_peak'] == 1:
             # if ekg.loc[i, 'qrs'] == 1:
-            plt.vlines(i, ymax=100, ymin=0, colors='r')
+            plt.vlines(i, ymax=500, ymin=0, colors='r')
     st.pyplot(fig)
     st.write(ekg)
 
@@ -236,10 +243,11 @@ elif function == 'Show an EKG':
     max = maxes.peak.median()
     peaks = ekg[ekg.peak > 0.5*max]
     # get single peaks
-    singles = Get_Singles(peaks)
-    st.write(singles)
-    # try to add rate
+    singles = Get_Singles(ekg)
+    # st.write(singles)
+
     # get rate
+    rate = Get_Rate(singles)
 
     # plot EKG
     x = ekg.seconds
@@ -271,7 +279,7 @@ elif function == 'Show an EKG':
     st.pyplot(fig)
     # time1 = time.time()
     if type not in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Heart Rate Over 120']:
-        st.write(f'The EKG evidences {PACs} PACs')
+        st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
 
 
 # st.write(ekg_df)
