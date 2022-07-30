@@ -228,23 +228,18 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
-# temporary visualization of feature dev
-    fig, ax = plt.subplots(figsize=(15, 10))
-    plt.plot(ekg.index, ekg.micro_volts)
-    for i in range(ekg.shape[0]):
-        if ekg.loc[i, 'r_peak'] == 1:
-            # if ekg.loc[i, 'qrs'] == 1:
-            plt.vlines(i, ymax=500, ymin=0, colors='r')
-    st.pyplot(fig)
-    st.write(ekg)
+# # temporary visualization of feature dev
+#     fig, ax = plt.subplots(figsize=(15, 10))
+#     plt.plot(ekg.index, ekg.micro_volts)
+#     for i in range(ekg.shape[0]):
+#         if ekg.loc[i, 'r_peak'] == 1:
+#             # if ekg.loc[i, 'qrs'] == 1:
+#             plt.vlines(i, ymax=500, ymin=0, colors='r')
+#     st.pyplot(fig)
+#     st.write(ekg)
 
-    # find the ekg peaks
-    # maxes = ekg.nlargest(200, 'peak')
-    # max = maxes.peak.median()
-    # peaks = ekg[ekg.peak > 0.5*max]
     # get single peaks
     singles = Get_Singles(ekg)
-    # st.write(singles)
 
     # get rate
     rate = Get_Rate(singles)
