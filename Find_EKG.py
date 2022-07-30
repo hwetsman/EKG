@@ -56,11 +56,12 @@ def Get_R_Peaks(ekg):
     ekg['qrs'] = 0
     # size = st.sidebar.slider('size', min_value=1, max_value=35, value=5)
     for i in range(ekg.shape[0]):
-        numbers = ekg.interval[i:i+5]
+        numbers = ekg.interval[i-4:i+4]
         if numbers.max()-numbers.min() > 50:
             ekg.loc[i, 'qrs'] = 1
     # # identify QRS peaks
     ekg['int_peak'] = 0
+    ekg['int_peak_2'] = 0
     ekg['r_peak'] = 0
     qrs_idices = ekg[ekg.qrs == 1].index.tolist()
     # get interim r_peak
@@ -71,7 +72,11 @@ def Get_R_Peaks(ekg):
     int_peak_indices = ekg[ekg.int_peak == 1].index.tolist()
     for idx in int_peak_indices:
         diffs = ekg.micro_volts[idx-5:idx+5]
+        ekg.loc[diffs.idxmax(), 'int_peak_2'] = 1
+    for idx in ekg[ekg.int_peak_2 == 1].index.tolist():
+        diffs = ekg.micro_volts[idx-1:idx+3]
         ekg.loc[diffs.idxmax(), 'r_peak'] = 1
+
     ekg = ekg[['micro_volts', 'seconds', 'peak', 'interval', 'qrs', 'r_peak']]
     return ekg
 
