@@ -206,6 +206,7 @@ elif function == 'Show PACs Over Time':
     else:
         pass
     pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
+    not_null = ekg_df[ekg_df.PACs.notnull()].shape[0]
     # set days for dataset
     first_day = ekg_df.date.min()
     last_day = ekg_df.date.max()
@@ -256,9 +257,10 @@ elif function == 'Show PACs Over Time':
         for day in list(set(afib.day.tolist())):
             plt.vlines(day, 0, 15, colors='r', alpha=.2)
         ax.set_title(
-            f'Maximum PACs in 30 Second in {pos_PACs} EKGs by Date - Days with AFib in Red')
+            f'Maximum PACs in 30 Second in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red')
     else:
-        ax.set_title(f'Maximum PACs in 30 Second in {pos_PACs} EKGs by Date')
+        ax.set_title(
+            f'Maximum PACs in 30 Second in {pos_PACs} out of {not_null} eligible EKGs by Date')
     st.pyplot(fig)
     st.write('I have written the export file for this figure to EKG_by_day.csv')
     export.to_csv('EKG_by_day.csv', index=False)
