@@ -40,7 +40,6 @@ def Get_EKG(name):
 
 
 def Clean_EKG(ekg):
-    time0 = time.time()
     ekg = ekg[1000::]
     ekg.reset_index(inplace=True, drop=False)
     ekg.columns = ['micro_volts', 'ignore']
@@ -51,13 +50,10 @@ def Clean_EKG(ekg):
     ekg['interval'] = ekg.micro_volts - ekg.micro_volts.shift(-1)
     # ekg = Get_R_Peaks(ekg)
     ekg = Get_alt_r(ekg)
-    time1 = time.time()
-    # st.write('clean ekg', {time1-time0})
     return ekg
 
 
 def Get_R_Peaks(ekg):
-    time0 = time.time()
     # identify QRS complexes
     ekg['qrs'] = 0
     # size = st.sidebar.slider('first pass size', min_value=1, max_value=35, value=5)
@@ -81,10 +77,8 @@ def Get_R_Peaks(ekg):
     int_peak_indices = int_peak_df.index
 
     for idx in int_peak_indices.tolist():
-        # calc_bottom = idx-5
         calc_bottom = idx-50
         abs_bottom = np.min(int_peak_indices)
-        # calc_top = idx+5
         calc_top = idx+50
         abs_top = np.max(int_peak_indices)
         if calc_bottom > abs_bottom:
@@ -97,37 +91,9 @@ def Get_R_Peaks(ekg):
             end = calc_top
 
         diffs = ekg.micro_volts[start:end]
-        # ekg.loc[diffs.idxmax(), 'int_peak_2'] = 1
         ekg.loc[diffs.idxmax(), 'r_peak'] = 1
 
-    # # st.write('This is ekg going into last pass', ekg)
-    # int_2_peak_df = ekg[ekg.int_peak_2 == 1]
-    # # st.write(int_2_peak_df)
-    # int_2_peak_indices = int_2_peak_df.index
-    # # st.write(int_2_peak_indices)
-    # for idx in int_2_peak_indices.tolist():
-    #     # st.write(idx)
-    #     calc_bottom = idx-1
-    #     abs_bottom = np.min(int_peak_indices)
-    #     calc_top = idx+3
-    #     abs_top = np.max(int_peak_indices)
-    #     if calc_bottom > abs_bottom:
-    #         start = calc_bottom
-    #     else:
-    #         start = abs_bottom
-    #     if calc_top > abs_top:
-    #         end = abs_top
-    #     else:
-    #         end = calc_top
-    #     diffs = ekg.micro_volts[start:end]
-    #     # st.write(diffs)
-    #     # st.write(diffs.idxmax())
-    #     ekg.loc[diffs.idxmax(), 'r_peak'] = 1
-    #     # st.write(ekg.loc[diffs.idxmax(), :])
-
     ekg = ekg[['micro_volts', 'seconds', 'peak', 'interval', 'qrs', 'r_peak']]
-    time1 = time.time()
-    # st.write('r_peak', {time1-time0})
     return ekg
 
 
@@ -139,45 +105,27 @@ def Get_alt_r(ekg):
     ekg.int_peak = np.where(ekg.micro_volts < med*.5, 0, ekg.int_peak)
     ekg['r_peak'] = np.where(ekg.int_peak > 0, 1, 0)
     ekg = ekg[['micro_volts', 'seconds', 'interval', 'r_peak']]
-    # st.write(ekg)
     return ekg
 
 
 def Get_Singles(ekg):
-    # singles = pd.DataFrame()
-    time0 = time.time()
     singles = ekg[ekg.r_peak == 1]
-    # while peaks.shape[0] > 0:
-    #     peak = peaks.iloc[0, 1]
-    #     group = peaks.loc[peaks.seconds < peak+.4]
-    #     single = group[group.peak == group.peak.max()]
-    #     singles = pd.concat([singles, single])
-    #     peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
-    # time1 = time.time()
-    # st.write('get singles', {time1-time0})
-    # st.write(singles)
     return singles
 
 
 def Get_PACs(singles):
-    time0 = time.time()
     singles['interval'] = singles.seconds.shift(-1) - singles.seconds
     median = singles.interval.median()
     singles['med'] = median
     singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
     PACs = int((singles[singles.sq_diff > .01].shape[0]/2)+.5)
-    time1 = time.time()
-    # st.write('get pacs', {time1-time0})
     return PACs
 
 
 def Get_Rate(singles):
-    time0 = time.time()
     singles['r_interval'] = singles.seconds - singles.seconds.shift(1)
     med = singles.r_interval.median()
     rate = int(58.3/med)
-    time1 = time.time()
-    # st.write('get rate', {time1-time0})
     return rate
 
 
