@@ -147,10 +147,10 @@ def Cull_Dense_R_Peak(ekg):
     r_peak_med = ekg[ekg.r_peak == 1]['micro_volts'].median()
     r_peak_density = round(ekg[ekg.micro_volts > r_peak_med*.9]['r_peak'].mean(), 2)
     if r_peak_density >= .24:
-        st.write('this is okay', r_peak_density)
+        # st.write('this is okay', r_peak_density)
         return False
     else:
-        st.write('this would be culled', r_peak_density)
+        # st.write('this would be culled', r_peak_density)
         return True
 
 
@@ -187,16 +187,21 @@ elif function == 'Show PACs Over Time':
             prog_bar.progress((idx)/ekg_df.shape[0])
             ekg_str = ekg_df.loc[idx, 'name']
             ekg = Get_EKG(ekg_str)
-            this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
-                0], 'clas']
-            b.write(f'I am working {ekg_str}')
-            ekg = Clean_EKG(ekg)
-            singles = Get_Singles(ekg)
-            PACs = Get_PACs(singles)
-            if Cull_Dense_R_Peak(ekg):
+            # st.write(ekg_df)
+            clas = ekg_df.loc[idx, 'clas']
+            if clas in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Inconclusive']:
                 ekg_df.loc[idx, 'PACs'] = None
             else:
-                ekg_df.loc[idx, 'PACs'] = PACs
+                this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
+                    0], 'clas']
+                b.write(f'I am working {ekg_str}')
+                ekg = Clean_EKG(ekg)
+                singles = Get_Singles(ekg)
+                PACs = Get_PACs(singles)
+                if Cull_Dense_R_Peak(ekg):
+                    ekg_df.loc[idx, 'PACs'] = None
+                else:
+                    ekg_df.loc[idx, 'PACs'] = PACs
 
     else:
         pass
@@ -312,9 +317,12 @@ elif function == 'Show an EKG':
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
 
-    PACs = Get_PACs(singles)
-
-    level = int(round(3*PACs/14, 0))
+    if Cull_Dense_R_Peak(ekg):
+        PACs = None
+        level = 0
+    else:
+        PACs = Get_PACs(singles)
+        level = int(round(3*PACs/14, 0))
     color_palette = sns.color_palette('RdYlGn_r')
 
     if type == 'Atrial Fibrillation':
@@ -334,10 +342,12 @@ elif function == 'Show an EKG':
     plt.plot(x, y)
     st.pyplot(fig)
     # time1 = time.time()
-    if type not in ['Atrial Fibrillation', 'Heart Rate Over 150', 'Heart Rate Over 120']:
+    if PACs != None:
+        st.write(PACs)
         st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
     else:
-        st.write(f'The EKG appears to have a rate of {rate}')
+        st.write(PACs)
+        st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
 
 
 # st.write(ekg_df)
