@@ -102,7 +102,7 @@ def Get_alt_r(ekg):
     ekg['int_peak'] = ekg.iloc[argrelextrema(ekg.micro_volts.values, np.greater_equal,
                                              order=n)[0]]['micro_volts']
     med = ekg.int_peak.median()
-    ekg.int_peak = np.where(ekg.micro_volts < med*.5, 0, ekg.int_peak)
+    ekg.int_peak = np.where(ekg.micro_volts < med*.55, 0, ekg.int_peak)
     ekg['r_peak'] = np.where(ekg.int_peak > 0, 1, 0)
     ekg = ekg[['micro_volts', 'seconds', 'interval', 'r_peak']]
     return ekg
@@ -118,7 +118,20 @@ def Get_PACs(singles):
     median = singles.interval.median()
     singles['med'] = median
     singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
-    PACs = int((singles[singles.sq_diff > .01].shape[0]/2)+.5)
+    PACs = int((singles[singles.sq_diff > .015].shape[0]/2)+.5)
+    # temporary visualization for dev
+
+    # if PACs > 0:
+    #     st.write(idx, PACs, singles.sq_diff)
+    #     fig, ax = plt.subplots()
+    #     plt.plot(ekg.index, ekg.micro_volts)
+    #     for i in singles.index.tolist():
+    #         plt.vlines(i, ymin=1000, ymax=1300, colors='r')
+    #     st.pyplot(fig)
+
+    # prog_bar.empty()
+    a.empty()
+    ekg_df.to_csv('EKGs.csv', index=False)
     return PACs
 
 
@@ -181,9 +194,7 @@ elif function == 'Show PACs Over Time':
             PACs = Get_PACs(singles)
             # a.write(f'The EKG evidences {PACs} PACs')
             ekg_df.loc[idx, 'PACs'] = PACs
-        prog_bar.empty()
-        a.empty()
-        ekg_df.to_csv('EKGs.csv', index=False)
+
     else:
         pass
     # set days for dataset
@@ -257,15 +268,15 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
-# # temporary visualization of feature dev
-#     fig, ax = plt.subplots(figsize=(15, 10))
-#     plt.plot(ekg.index, ekg.micro_volts)
-#     for i in range(ekg.shape[0]):
-#         if ekg.loc[i, 'r_peak'] == 1:
-#             # if ekg.loc[i, 'qrs'] == 1:
-#             plt.vlines(i, ymax=500, ymin=0, colors='r')
-#     st.pyplot(fig)
-#     st.write(ekg)
+# temporary visualization of feature dev
+    fig, ax = plt.subplots(figsize=(15, 10))
+    plt.plot(ekg.index, ekg.micro_volts)
+    for i in range(ekg.shape[0]):
+        if ekg.loc[i, 'r_peak'] == 1:
+            # if ekg.loc[i, 'qrs'] == 1:
+            plt.vlines(i, ymax=500, ymin=0, colors='r')
+    st.pyplot(fig)
+    st.write(ekg)
 
     # get single peaks
     singles = Get_Singles(ekg)
