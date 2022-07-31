@@ -132,40 +132,30 @@ def Get_R_Peaks(ekg):
 
 
 def Get_alt_r(ekg):
-    # n = st.sidebar.slider('first pass size', min_value=1, max_value=500, value=5)
     n = 190
     ekg['int_peak'] = ekg.iloc[argrelextrema(ekg.micro_volts.values, np.greater_equal,
                                              order=n)[0]]['micro_volts']
     med = ekg.int_peak.median()
-    # st.write(med)
     ekg.int_peak = np.where(ekg.micro_volts < med*.5, 0, ekg.int_peak)
     ekg['r_peak'] = np.where(ekg.int_peak > 0, 1, 0)
+    ekg = ekg[['micro_volts', 'seconds', 'interval', 'r_peak']]
     # st.write(ekg)
-    # temporary visualization of feature dev
-    # fig, ax = plt.subplots(figsize=(15, 10))
-    # plt.plot(ekg.index, ekg.micro_volts)
-    # for i in range(ekg.shape[0]):
-    #     if ekg.loc[i, 'r_peak'] == 1:
-    #         # if ekg.loc[i, 'qrs'] == 1:
-    #         plt.vlines(i, ymax=1400, ymin=1200, colors='r')
-    #         plt.scatter(i, ekg.loc[i, 'micro_volts'], c='r')
-    # st.pyplot(fig)
-
     return ekg
 
 
-def Get_Singles(peaks):
+def Get_Singles(ekg):
     # singles = pd.DataFrame()
     time0 = time.time()
     singles = ekg[ekg.r_peak == 1]
-    while peaks.shape[0] > 0:
-        peak = peaks.iloc[0, 1]
-        group = peaks.loc[peaks.seconds < peak+.4]
-        single = group[group.peak == group.peak.max()]
-        singles = pd.concat([singles, single])
-        peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
-    time1 = time.time()
+    # while peaks.shape[0] > 0:
+    #     peak = peaks.iloc[0, 1]
+    #     group = peaks.loc[peaks.seconds < peak+.4]
+    #     single = group[group.peak == group.peak.max()]
+    #     singles = pd.concat([singles, single])
+    #     peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    # time1 = time.time()
     # st.write('get singles', {time1-time0})
+    # st.write(singles)
     return singles
 
 
@@ -196,9 +186,9 @@ path = './apple_health_export/'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
 function = st.sidebar.selectbox(
-    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'])
+    'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=0)
 ekg_df = pd.read_csv('EKGs.csv')
-# create ekg df
+# st.write('got this far')
 #############skip for now#################
 if function == 'Reset EKG Database':
     a = st.empty()
@@ -236,10 +226,10 @@ elif function == 'Show PACs Over Time':
             # b.write(idx)
             ekg = Clean_EKG(ekg)
 
-            maxes = ekg.nlargest(200, 'peak')
-            max = maxes.peak.median()
-            peaks = ekg[ekg.peak > 0.5*max]
-            singles = Get_Singles(peaks)
+            # maxes = ekg.nlargest(200, 'peak')
+            # max = maxes.peak.median()
+            # peaks = ekg[ekg.peak > 0.5*max]
+            singles = Get_Singles(ekg)
             PACs = Get_PACs(singles)
             # a.write(f'The EKG evidences {PACs} PACs')
             ekg_df.loc[idx, 'PACs'] = PACs
