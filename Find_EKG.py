@@ -129,8 +129,6 @@ def Get_PACs(singles):
     #         plt.vlines(i, ymin=1000, ymax=1300, colors='r')
     #     st.pyplot(fig)
 
-    # prog_bar.empty()
-    a.empty()
     ekg_df.to_csv('EKGs.csv', index=False)
     return PACs
 
@@ -183,7 +181,7 @@ elif function == 'Show PACs Over Time':
             ekg = Get_EKG(ekg_str)
             this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
                 0], 'clas']
-            # a.write(f'I am working {ekg_str}, classified as {this_classification}')
+            b.write(f'I am working {ekg_str}')
             # b.write(idx)
             ekg = Clean_EKG(ekg)
 
