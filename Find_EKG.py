@@ -140,6 +140,20 @@ def Get_Rate(singles):
     return rate
 
 
+def Cull_Dense_R_Peak(ekg):
+    """If there is too much non-peak activity within range of r_peaks this
+    will tell the caller to cull the EKG from the db
+    """
+    r_peak_med = ekg[ekg.r_peak == 1]['micro_volts'].median()
+    r_peak_density = round(ekg[ekg.micro_volts > r_peak_med*.9]['r_peak'].mean(), 2)
+    if r_peak_density >= .24:
+        st.write('this is okay', r_peak_density)
+        return False
+    else:
+        st.write('this would be culled', r_peak_density)
+        return True
+
+
 # create streamlit page
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
@@ -162,12 +176,7 @@ if function == 'Reset EKG Database':
 ##########################################
 elif function == 'Show PACs Over Time':
     ekg_df = pd.read_csv('EKGs.csv')
-    # poor = ekg_df[ekg_df.clas == 'Poor Recording']
-    # ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
     ekg_df.reset_index(inplace=True, drop=True)
-
-    # st.write(
-    #     f'There are {ekg_df.shape[0]} EKGs with good recordings.')
 
     if 'PACs' not in ekg_df.columns:
         a = st.empty()
@@ -175,23 +184,19 @@ elif function == 'Show PACs Over Time':
         a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
         prog_bar = st.progress(0)
         for idx, row in ekg_df.iterrows():
-            # st.write(idx, f"in ekg_df of {ekg_df.loc[idx,'name']}")
             prog_bar.progress((idx)/ekg_df.shape[0])
             ekg_str = ekg_df.loc[idx, 'name']
             ekg = Get_EKG(ekg_str)
             this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
                 0], 'clas']
             b.write(f'I am working {ekg_str}')
-            # b.write(idx)
             ekg = Clean_EKG(ekg)
-
-            # maxes = ekg.nlargest(200, 'peak')
-            # max = maxes.peak.median()
-            # peaks = ekg[ekg.peak > 0.5*max]
             singles = Get_Singles(ekg)
             PACs = Get_PACs(singles)
-            # a.write(f'The EKG evidences {PACs} PACs')
-            ekg_df.loc[idx, 'PACs'] = PACs
+            if Cull_Dense_R_Peak(ekg):
+                ekg_df.loc[idx, 'PACs'] = None
+            else:
+                ekg_df.loc[idx, 'PACs'] = PACs
 
     else:
         pass
@@ -266,15 +271,33 @@ elif function == 'Show an EKG':
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
 
+
 # temporary visualization of feature dev
+
+    # st.write(Cull_Dense_R_Peak(ekg))
+    # fraction = st.sidebar.slider('fraction of r_peak', min_value=1, max_value=9, value=2)
+    # st.write(ekg[ekg.r_peak == 1]['micro_volts'])
+    # r_peak_med = ekg[ekg.r_peak == 1]['micro_volts'].median()
+    # st.write(r_peak_med)
+    # r_peak_density = round(ekg[ekg.micro_volts > r_peak_med*fraction/10]['r_peak'].mean(), 2)
+    # st.write(r_peak_density)
+    ekg['min'] = ekg.micro_volts[(ekg.micro_volts.shift(1) > ekg.micro_volts) & (
+        ekg.micro_volts.shift(-1) > ekg.micro_volts)]
+    ekg['max'] = ekg.micro_volts[(ekg.micro_volts.shift(1) < ekg.micro_volts) & (
+        ekg.micro_volts.shift(-1) < ekg.micro_volts)]
+
     fig, ax = plt.subplots(figsize=(15, 10))
+    # plt.hlines(r_peak_med*fraction/10, xmin=0, xmax=3000)
     plt.plot(ekg.index, ekg.micro_volts)
+    plt.scatter(ekg.index, ekg['min'], c='r')
+    plt.scatter(ekg.index, ekg['max'], c='g')
     for i in range(ekg.shape[0]):
         if ekg.loc[i, 'r_peak'] == 1:
-            # if ekg.loc[i, 'qrs'] == 1:
             plt.vlines(i, ymax=500, ymin=0, colors='r')
     st.pyplot(fig)
-    st.write(ekg)
+    Cull_Dense_R_Peak(ekg)
+
+    # st.write(ekg)
 
     # get single peaks
     singles = Get_Singles(ekg)
