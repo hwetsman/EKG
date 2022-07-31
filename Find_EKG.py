@@ -5,6 +5,7 @@ import streamlit as st
 import time
 import numpy as np
 import seaborn as sns
+from scipy.signal import argrelextrema
 
 
 def Create_EKG_DF(ekgs):
@@ -25,7 +26,7 @@ def Create_EKG_DF(ekgs):
     ekg_df['day'] = ekg_df.date.str[0:10]
     ekg_df.date = pd.to_datetime(ekg_df.date)
     ekg_df.sort_values(by='date', inplace=True)
-    ekg_df.to_csv('EKGs.csv', index=False)
+
     # st.write('I have finished writing EKGs.csv. Try another function!')
     # st.write(ekg_df)
     return ekg_df
@@ -39,6 +40,7 @@ def Get_EKG(name):
 
 
 def Clean_EKG(ekg):
+    time0 = time.time()
     ekg = ekg[1000::]
     ekg.reset_index(inplace=True, drop=False)
     ekg.columns = ['micro_volts', 'ignore']
@@ -47,65 +49,145 @@ def Clean_EKG(ekg):
     ekg = ekg[['micro_volts', 'seconds']]
     ekg['peak'] = ekg.micro_volts - ekg.micro_volts.shift(-7)
     ekg['interval'] = ekg.micro_volts - ekg.micro_volts.shift(-1)
-    ekg = Get_R_Peaks(ekg)
+    # ekg = Get_R_Peaks(ekg)
+    ekg = Get_alt_r(ekg)
+    time1 = time.time()
+    # st.write('clean ekg', {time1-time0})
     return ekg
 
 
 def Get_R_Peaks(ekg):
+    time0 = time.time()
     # identify QRS complexes
     ekg['qrs'] = 0
-    # size = st.sidebar.slider('size', min_value=1, max_value=35, value=5)
+    # size = st.sidebar.slider('first pass size', min_value=1, max_value=35, value=5)
     for i in range(ekg.shape[0]):
         numbers = ekg.interval[i-4:i+4]
         if numbers.max()-numbers.min() > 50:
             ekg.loc[i, 'qrs'] = 1
-    # # identify QRS peaks
+    # # create 3 empty cols
     ekg['int_peak'] = 0
     ekg['int_peak_2'] = 0
     ekg['r_peak'] = 0
-    qrs_idices = ekg[ekg.qrs == 1].index.tolist()
-    # get interim r_peak
-    for idx in qrs_idices:
+    # identify possible r peaks
+    qrs_indices = ekg[ekg.qrs == 1].index.tolist()
+    # get interim peak
+    for idx in qrs_indices:
         diffs = ekg.micro_volts[idx-5:idx+5]
         if diffs.max()-diffs.min() > 500:
             ekg.loc[diffs.idxmax(), 'int_peak'] = 1
-    int_peak_indices = ekg[ekg.int_peak == 1].index.tolist()
-    for idx in int_peak_indices:
-        diffs = ekg.micro_volts[idx-5:idx+5]
-        ekg.loc[diffs.idxmax(), 'int_peak_2'] = 1
-    for idx in ekg[ekg.int_peak_2 == 1].index.tolist():
-        diffs = ekg.micro_volts[idx-1:idx+3]
+
+    int_peak_df = ekg[ekg.int_peak == 1]
+    int_peak_indices = int_peak_df.index
+
+    for idx in int_peak_indices.tolist():
+        # calc_bottom = idx-5
+        calc_bottom = idx-50
+        abs_bottom = np.min(int_peak_indices)
+        # calc_top = idx+5
+        calc_top = idx+50
+        abs_top = np.max(int_peak_indices)
+        if calc_bottom > abs_bottom:
+            start = calc_bottom
+        else:
+            start = abs_bottom
+        if calc_top > abs_top:
+            end = abs_top
+        else:
+            end = calc_top
+
+        diffs = ekg.micro_volts[start:end]
+        # ekg.loc[diffs.idxmax(), 'int_peak_2'] = 1
         ekg.loc[diffs.idxmax(), 'r_peak'] = 1
 
+    # # st.write('This is ekg going into last pass', ekg)
+    # int_2_peak_df = ekg[ekg.int_peak_2 == 1]
+    # # st.write(int_2_peak_df)
+    # int_2_peak_indices = int_2_peak_df.index
+    # # st.write(int_2_peak_indices)
+    # for idx in int_2_peak_indices.tolist():
+    #     # st.write(idx)
+    #     calc_bottom = idx-1
+    #     abs_bottom = np.min(int_peak_indices)
+    #     calc_top = idx+3
+    #     abs_top = np.max(int_peak_indices)
+    #     if calc_bottom > abs_bottom:
+    #         start = calc_bottom
+    #     else:
+    #         start = abs_bottom
+    #     if calc_top > abs_top:
+    #         end = abs_top
+    #     else:
+    #         end = calc_top
+    #     diffs = ekg.micro_volts[start:end]
+    #     # st.write(diffs)
+    #     # st.write(diffs.idxmax())
+    #     ekg.loc[diffs.idxmax(), 'r_peak'] = 1
+    #     # st.write(ekg.loc[diffs.idxmax(), :])
+
     ekg = ekg[['micro_volts', 'seconds', 'peak', 'interval', 'qrs', 'r_peak']]
+    time1 = time.time()
+    # st.write('r_peak', {time1-time0})
+    return ekg
+
+
+def Get_alt_r(ekg):
+    # n = st.sidebar.slider('first pass size', min_value=1, max_value=500, value=5)
+    n = 190
+    ekg['int_peak'] = ekg.iloc[argrelextrema(ekg.micro_volts.values, np.greater_equal,
+                                             order=n)[0]]['micro_volts']
+    med = ekg.int_peak.median()
+    # st.write(med)
+    ekg.int_peak = np.where(ekg.micro_volts < med*.5, 0, ekg.int_peak)
+    ekg['r_peak'] = np.where(ekg.int_peak > 0, 1, 0)
+    # st.write(ekg)
+    # temporary visualization of feature dev
+    # fig, ax = plt.subplots(figsize=(15, 10))
+    # plt.plot(ekg.index, ekg.micro_volts)
+    # for i in range(ekg.shape[0]):
+    #     if ekg.loc[i, 'r_peak'] == 1:
+    #         # if ekg.loc[i, 'qrs'] == 1:
+    #         plt.vlines(i, ymax=1400, ymin=1200, colors='r')
+    #         plt.scatter(i, ekg.loc[i, 'micro_volts'], c='r')
+    # st.pyplot(fig)
+
     return ekg
 
 
 def Get_Singles(peaks):
     # singles = pd.DataFrame()
+    time0 = time.time()
     singles = ekg[ekg.r_peak == 1]
-    # while peaks.shape[0] > 0:
-    #     peak = peaks.iloc[0, 1]
-    #     group = peaks.loc[peaks.seconds < peak+.4]
-    #     single = group[group.peak == group.peak.max()]
-    #     singles = pd.concat([singles, single])
-    #     peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    while peaks.shape[0] > 0:
+        peak = peaks.iloc[0, 1]
+        group = peaks.loc[peaks.seconds < peak+.4]
+        single = group[group.peak == group.peak.max()]
+        singles = pd.concat([singles, single])
+        peaks = pd.concat([peaks, group]).drop_duplicates(keep=False)
+    time1 = time.time()
+    # st.write('get singles', {time1-time0})
     return singles
 
 
 def Get_PACs(singles):
+    time0 = time.time()
     singles['interval'] = singles.seconds.shift(-1) - singles.seconds
     median = singles.interval.median()
     singles['med'] = median
     singles['sq_diff'] = (singles.med-singles.interval)*(singles.med-singles.interval)
     PACs = int((singles[singles.sq_diff > .01].shape[0]/2)+.5)
+    time1 = time.time()
+    # st.write('get pacs', {time1-time0})
     return PACs
 
 
 def Get_Rate(singles):
+    time0 = time.time()
     singles['r_interval'] = singles.seconds - singles.seconds.shift(1)
     med = singles.r_interval.median()
     rate = int(58.3/med)
+    time1 = time.time()
+    # st.write('get rate', {time1-time0})
     return rate
 
 
@@ -122,12 +204,17 @@ if function == 'Reset EKG Database':
     a = st.empty()
     a.write(f'I am creating an index of your {len(ekgs)} EKGs...')
     ekg_df = Create_EKG_DF(ekgs)
-    a.write('I have finished writing EKGs.csv. Try another function!')
+    # poor = ekg_df[ekg_df.clas=='Poor Recording']
+    ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
+    ekg_df.to_csv('EKGs.csv', index=False)
+    st.write(ekg_df)
+    a.write(
+        f'I have finished writing {ekg_df.shape[0]} EKGs with good recordings to EKGs.csv. Try another function!')
 ##########################################
 elif function == 'Show PACs Over Time':
     ekg_df = pd.read_csv('EKGs.csv')
-    poor = ekg_df[ekg_df.clas == 'Poor Recording']
-    ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
+    # poor = ekg_df[ekg_df.clas == 'Poor Recording']
+    # ekg_df = ekg_df[~ekg_df.clas.str.contains('Poor Recording')]
     ekg_df.reset_index(inplace=True, drop=True)
 
     # st.write(
@@ -135,16 +222,20 @@ elif function == 'Show PACs Over Time':
 
     if 'PACs' not in ekg_df.columns:
         a = st.empty()
+        b = st.empty()
         a.write(f'I am working your list of {ekg_df.shape[0]} EKGs with good recordings.')
         prog_bar = st.progress(0)
         for idx, row in ekg_df.iterrows():
+            # st.write(idx, f"in ekg_df of {ekg_df.loc[idx,'name']}")
             prog_bar.progress((idx)/ekg_df.shape[0])
             ekg_str = ekg_df.loc[idx, 'name']
             ekg = Get_EKG(ekg_str)
             this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[
                 0], 'clas']
             # a.write(f'I am working {ekg_str}, classified as {this_classification}')
+            # b.write(idx)
             ekg = Clean_EKG(ekg)
+
             maxes = ekg.nlargest(200, 'peak')
             max = maxes.peak.median()
             peaks = ekg[ekg.peak > 0.5*max]
