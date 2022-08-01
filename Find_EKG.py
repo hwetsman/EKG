@@ -276,17 +276,16 @@ elif function == 'Show an EKG':
     ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
 # select and clean EKG to show
     ekg = Get_EKG(ekg_str)
-    st.write(ekg)
+    # get the classification and PAC number for this ekg from ekg_df
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
     this_PACs = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'PACs']
-    st.write(this_PACs)
+
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
     st.write('cleaned ekg')
     st.write(ekg)
-
+    # get singles and rate
     singles = Get_Singles(ekg)
-    # get rate
     rate = Get_Rate(singles)
 
     # plot EKG
@@ -295,12 +294,12 @@ elif function == 'Show an EKG':
     time0 = time.time()
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
-
+    # set pacs and level of
     if pd.isna(this_PACs):
         PACs = None
         level = 0
     else:
-        PACs = Get_PACs(singles)
+        PACs = int(this_PACs)
         level = int(round(3*PACs/14, 0))
     color_palette = sns.color_palette('RdYlGn_r')
 
