@@ -203,7 +203,7 @@ elif function == 'Show PACs Over Time':
                 else:
                     ekg_df.loc[idx, 'PACs'] = PACs
         prog_bar.empty()
-
+        b.empty()
     else:
         pass
     pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
