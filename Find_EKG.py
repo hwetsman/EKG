@@ -284,6 +284,7 @@ elif function == 'Show an EKG':
     ekg = Clean_EKG(ekg)
     st.write('cleaned ekg')
     st.write(ekg)
+
     # get singles and rate
     singles = Get_Singles(ekg)
     rate = Get_Rate(singles)
@@ -294,7 +295,8 @@ elif function == 'Show an EKG':
     time0 = time.time()
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
-    # set pacs and level of
+
+    # set PACs and level of
     if pd.isna(this_PACs):
         PACs = None
         level = 0
@@ -305,7 +307,6 @@ elif function == 'Show an EKG':
 
     if type == 'Atrial Fibrillation':
         ax.set_facecolor(color_palette[5])
-        # ax.set_facecolor('xkcd:salmon')
     elif type == 'Inconclusive':
         ax.set_facecolor(color_palette[4])
     elif type == 'Heart Rate Over 120':
@@ -319,20 +320,7 @@ elif function == 'Show an EKG':
 
     plt.plot(x, y)
     st.pyplot(fig)
-    # time1 = time.time()
     if pd.isna(this_PACs):
-        # st.write(PACs)
         st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-
     else:
-        # st.write(PACs)
         st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
-
-
-# st.write(ekg_df)
-# fig, ax = plt.subplots(figsize=(15, 4))
-# ax.set_title('PACs in 30 Second EKGs by Date')
-# ax.set_ylabel('Number of PACs')
-# ax.set_xticks(ekg_df.index[::20], labels=ekg_df.date[::20], rotation=70)
-# plt.plot(ekg_df.date, ekg_df.PACs)
-# st.pyplot(fig)
