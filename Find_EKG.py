@@ -314,10 +314,13 @@ elif function == 'Show an EKG':
         ax.set_facecolor(color_palette[5])
     else:
         ax.set_facecolor(color_palette[level])
-
+    # set title and labels
+    if pd.isna(this_PACs):
+        ax.set_title(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+        # st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+    else:
+        # st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+        ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
+    ax.set_xlabel('Seconds')
     plt.plot(x, y)
     st.pyplot(fig)
-    if pd.isna(this_PACs):
-        st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
-    else:
-        st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
