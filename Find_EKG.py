@@ -322,5 +322,6 @@ elif function == 'Show an EKG':
         # st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
         ax.set_title(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
     ax.set_xlabel('Seconds')
+    ax.yaxis.set_visible(False)
     plt.plot(x, y)
     st.pyplot(fig)
