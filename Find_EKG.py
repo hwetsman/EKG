@@ -158,10 +158,11 @@ def Cull_Dense_R_Peak(ekg):
 path = './apple_health_export/'
 dir = path + 'electrocardiograms'
 ekgs = os.listdir(dir)
+st.set_page_config(layout="wide")
 function = st.sidebar.selectbox(
     'Select a Function', ['Show an EKG', 'Reset EKG Database',  'Show PACs Over Time'], index=0)
 ekg_df = pd.read_csv('EKGs.csv')
-# st.write('got this far')
+
 #############skip for now#################
 if function == 'Reset EKG Database':
     a = st.empty()
