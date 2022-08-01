@@ -204,6 +204,7 @@ elif function == 'Show PACs Over Time':
                     ekg_df.loc[idx, 'PACs'] = PACs
         prog_bar.empty()
         b.empty()
+        a.empty()
     else:
         pass
     pos_PACs = ekg_df[ekg_df.PACs > 0].shape[0]
@@ -263,7 +264,7 @@ elif function == 'Show PACs Over Time':
         ax.set_title(
             f'Maximum PACs in 30 Second in {pos_PACs} out of {not_null} eligible EKGs by Date')
     st.pyplot(fig)
-    st.write('I have written the export file for this figure to EKG_by_day.csv')
+    st.write('Export file for this figure is EKG_by_day.csv')
     export.to_csv('EKG_by_day.csv', index=False)
 ##########################################
 elif function == 'Show an EKG':
