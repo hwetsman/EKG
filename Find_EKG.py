@@ -290,7 +290,6 @@ elif function == 'Show an EKG':
     # plot EKG
     x = ekg.seconds
     y = ekg.micro_volts
-    time0 = time.time()
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
 
