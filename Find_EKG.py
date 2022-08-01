@@ -282,8 +282,6 @@ elif function == 'Show an EKG':
 
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
-    st.write('cleaned ekg')
-    st.write(ekg)
 
     # get singles and rate
     singles = Get_Singles(ekg)
