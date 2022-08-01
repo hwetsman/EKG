@@ -244,8 +244,8 @@ elif function == 'Show PACs Over Time':
 
     how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
 
-    fig, ax = plt.subplots(figsize=(15, 8))
-    ax.set_ylabel('Number of PACs')
+    fig, ax = plt.subplots(figsize=(18, 10))
+
     if how == 'Bar':
         plt.bar(export.day, export.PACs)
     else:
@@ -254,15 +254,17 @@ elif function == 'Show PACs Over Time':
         plt.plot(plot_df.day, plot_df.avg)
     ax.set_xticks(export.day[::20], label=export.day[::20])
     plt.xticks(rotation=70, ha='right')
-
+    title_fontdict = {'fontsize': 24, 'fontweight': 10}
+    label_fontdict = {'fontsize': 20, 'fontweight': 8}
+    ax.set_ylabel('Number of PACs', fontdict=label_fontdict)
     if afib.shape[0] > 0:
         for day in list(set(afib.day.tolist())):
             plt.vlines(day, 0, 15, colors='r', alpha=.2)
         ax.set_title(
-            f'Maximum PACs in 30 Second in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red')
+            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date - Days with AFib in Red', fontdict=title_fontdict)
     else:
         ax.set_title(
-            f'Maximum PACs in 30 Second in {pos_PACs} out of {not_null} eligible EKGs by Date')
+            f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
     st.pyplot(fig)
     st.write('Export file for this figure is EKG_by_day.csv')
     export.to_csv('EKG_by_day.csv', index=False)
