@@ -276,39 +276,18 @@ elif function == 'Show an EKG':
     ekg_str = st.sidebar.selectbox('Choose an EKG', show_df.name)
 # select and clean EKG to show
     ekg = Get_EKG(ekg_str)
+    st.write(ekg)
     this_classification = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'clas']
+    this_PACs = ekg_df.loc[ekg_df[ekg_df.name == ekg_str].index.tolist()[0], 'PACs']
+    st.write(this_PACs)
     st.write(f'You have selected {ekg_str}, classified as {this_classification}')
     ekg = Clean_EKG(ekg)
-    # cull if not crisp
-    # Cull_Dense_R_Peak(ekg)
-    # get single peaks
+    st.write('cleaned ekg')
+    st.write(ekg)
+
     singles = Get_Singles(ekg)
     # get rate
     rate = Get_Rate(singles)
-
-# temporary visualization of feature dev
-
-    # st.write(Cull_Dense_R_Peak(ekg))
-    # fraction = st.sidebar.slider('fraction of r_peak', min_value=1, max_value=9, value=2)
-    # st.write(ekg[ekg.r_peak == 1]['micro_volts'])
-    # r_peak_med = ekg[ekg.r_peak == 1]['micro_volts'].median()
-    # st.write(r_peak_med)
-    # r_peak_density = round(ekg[ekg.micro_volts > r_peak_med*fraction/10]['r_peak'].mean(), 2)
-    # st.write(r_peak_density)
-    # ekg['min'] = ekg.micro_volts[(ekg.micro_volts.shift(1) > ekg.micro_volts) & (
-    #     ekg.micro_volts.shift(-1) > ekg.micro_volts)]
-    # ekg['max'] = ekg.micro_volts[(ekg.micro_volts.shift(1) < ekg.micro_volts) & (
-    #     ekg.micro_volts.shift(-1) < ekg.micro_volts)]
-    #
-    # fig, ax = plt.subplots(figsize=(15, 10))
-    # # plt.hlines(r_peak_med*fraction/10, xmin=0, xmax=3000)
-    # plt.plot(ekg.index, ekg.micro_volts)
-    # plt.scatter(ekg.index, ekg['min'], c='r')
-    # plt.scatter(ekg.index, ekg['max'], c='g')
-    # for i in range(ekg.shape[0]):
-    #     if ekg.loc[i, 'r_peak'] == 1:
-    #         plt.vlines(i, ymax=500, ymin=0, colors='r')
-    # st.pyplot(fig)
 
     # plot EKG
     x = ekg.seconds
@@ -317,7 +296,7 @@ elif function == 'Show an EKG':
     fig, ax = plt.subplots(figsize=(15, 4))
     ax.set_ylim(y.min(), y.max())
 
-    if Cull_Dense_R_Peak(ekg):
+    if pd.isna(this_PACs):
         PACs = None
         level = 0
     else:
@@ -342,12 +321,13 @@ elif function == 'Show an EKG':
     plt.plot(x, y)
     st.pyplot(fig)
     # time1 = time.time()
-    if PACs != None:
-        # st.write(PACs)
-        st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
-    else:
+    if pd.isna(this_PACs):
         # st.write(PACs)
         st.write(f'The EKG appears to have a rate of {rate}. It cannot be used to judge PACs.')
+
+    else:
+        # st.write(PACs)
+        st.write(f'The EKG evidences {PACs} PACs with a heart rate of {rate}')
 
 
 # st.write(ekg_df)
