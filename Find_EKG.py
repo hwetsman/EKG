@@ -245,7 +245,7 @@ elif function == 'Show PACs Over Time':
 
     how = st.sidebar.radio('How to Plot PACs', ['Bar', 'Rolling Mean'])
 
-    fig, ax = plt.subplots(figsize=(18, 10))
+    fig, ax = plt.subplots(figsize=(18, 8))
 
     if how == 'Bar':
         plt.bar(export.day, export.PACs)
@@ -253,7 +253,7 @@ elif function == 'Show PACs Over Time':
         n = st.sidebar.slider('Number of Days Rolling', min_value=1, max_value=30, value=5)
         plot_df['avg'] = plot_df.PACs.rolling(window=n).mean()
         plt.plot(plot_df.day, plot_df.avg)
-    ax.set_xticks(export.day[::20], label=export.day[::20])
+    ax.set_xticks(export.day[-1::-20], label=export.day[-1::-20])
     plt.xticks(rotation=70, ha='right')
     title_fontdict = {'fontsize': 24, 'fontweight': 10}
     label_fontdict = {'fontsize': 20, 'fontweight': 8}
