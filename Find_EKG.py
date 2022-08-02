@@ -267,6 +267,7 @@ elif function == 'Show PACs Over Time':
         ax.set_title(
             f'Maximum PACs in 30 Seconds in {pos_PACs} out of {not_null} eligible EKGs by Date', fontdict=title_fontdict)
     st.pyplot(fig)
+    export.rename(columns={'day': 'date'}, inplace=True)
     st.write('Export file for this figure is EKG_by_day.csv')
     export.to_csv('EKG_by_day.csv', index=False)
 ##########################################
